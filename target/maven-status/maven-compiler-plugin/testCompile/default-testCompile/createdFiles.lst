@@ -1,2 +1,4 @@
-com/tdd/spring/TestMyService.class
+com/tdd/spring/TestMetroController.class
 com/tdd/spring/TestMyController.class
+com/tdd/spring/TestMetroService.class
+com/tdd/spring/TestMyService.class
