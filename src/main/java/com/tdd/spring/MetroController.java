@@ -11,6 +11,7 @@ public class MetroController {
   private MetroService metroService;
   
   public MetroController(MetroService metroService) {
+    System.out.println("in controller const.");
     this.metroService = metroService;
   }
 

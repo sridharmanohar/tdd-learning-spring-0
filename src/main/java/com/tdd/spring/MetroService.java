@@ -10,6 +10,7 @@ public class MetroService {
   private MetroRepository metroRepository;
 
   public MetroService(MetroRepository metroRepository) {
+    System.out.println("in service const.");
     this.metroRepository = metroRepository;
   }
 

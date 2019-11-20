@@ -16,6 +16,10 @@ c. Ability to check the list of all proposed metros.
 + mvn -Dtest=<test_class_name> test : this will run only the mentioned test class and all of it's test methods.
 + mvn -Dtest=<test_class_name>#<test_method_1>+<test_method_2> : this will run only the 2 methods of that particular test class and nothing else.
 
+## Mandatory Naming convention to be followed while creating test class to be executed by maven's surefire plugin:
++ This is good, has all the details: https://maven.apache.org/surefire/maven-surefire-plugin/examples/inclusion-exclusion.html
++ So, basically, either start the Test class name with Test or end with Test(s).
+
 ## Issue after adding spring-boot-starter-data-jpa and postgresql
 + Was getting the below error while booting the application and also while running the test with mvn test.
 + java.lang.IllegalStateException: Failed to load ApplicationContext
@@ -48,5 +52,8 @@ Caused by: org.springframework.beans.factory.UnsatisfiedDependencyException: Err
 + And, that's it, this resolved the issue.
 
 
+## ROUGH Notes
++ table: metros, 
+  cols: id, name, status (confirmed, proposed)
 
 
