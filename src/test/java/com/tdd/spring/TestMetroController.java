@@ -3,7 +3,6 @@ package com.tdd.spring;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,26 +17,25 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 @AutoConfigureMockMvc
 public class TestMetroController {
 
-  @Autowired
-  private MockMvc mockMvc;
+  private final MockMvc mockMvc;
+  private final MetroController metroController;
 
   @MockBean
   private MetroService metroService;
-  
+
   @MockBean
   private MetroRepository metroRepository;
 
-  private MetroController metroController;
-
-  @BeforeEach
-  public void setUp() {
-    metroController = new MetroController(metroService);
+  @Autowired
+  public TestMetroController(MetroController metroController, MockMvc mockMvc) {
+    this.metroController = metroController;
+    this.mockMvc = mockMvc;
   }
-  
+
   /**
-   * verify that when a user hits "/metro" he gets a status 200.
-   * verify that when a user hits "/metro" he gets a json response.
-   * verify the count of metros returned when user hits "/metro".
+   * verify that when a user hits "/metro" he gets a status 200. verify that when
+   * a user hits "/metro" he gets a json response. verify the count of metros
+   * returned when user hits "/metro".
    */
   @Test
   public void whenMetros__thenStatus200() throws Exception {

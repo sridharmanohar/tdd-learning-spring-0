@@ -1,9 +1,6 @@
 package com.tdd.spring;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import org.junit.jupiter.api.BeforeEach;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,36 +13,28 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 @AutoConfigureMockMvc
 public class TestMetro {
 
+  private final MockMvc mockMvc;
+  private final MetroController metroController;
+
   @Autowired
-  private MockMvc mockMvc;
-  
-  private MetroController metroController;
-  private MetroService metroService;
-  private MetroRepository metroRepository;
-  
-  @BeforeEach
-  public void setp() {
-    metroRepository = new MetroRepository() {
-      @Override
-      public Set<String> findMetros() {
-        Set<String> metros = new HashSet<>();
-        metros.add("Hyderabad");
-        metros.add("Chennai");
-        metros.add("Bengaluru");
-        metros.add("Kolkata");
-        metros.add("Mumbai");
-        // TODO Auto-generated method stub
-        return metros;
-      }
-    };
-    metroService = new MetroService(metroRepository);
-    metroController = new MetroController(metroService);
+  public TestMetro(MetroController metroController, MockMvc mockMvc) {
+    this.metroController = metroController;
+    this.mockMvc = mockMvc;
   }
-    
+
+  /**
+   * verify the status, result size and the content from the database when a
+   * /metro request occurs.
+   */
   @Test
   public void whenMetrosRequest__thenStatus200() throws Exception {
+    // Body = ["Chennai","Bengaluru","Kolkata","Mumbai","Hyderabad"] - this is how
+    // the response in the body will be.
+    final String EXPECTED_BODY_RESPONSE = "[\"Chennai\",\"Bengaluru\",\"Kolkata\",\"Mumbai\",\"Hyderabad\"]";
     System.out.println(" ----------------- IN HERE -----------------------");
     mockMvc.perform(MockMvcRequestBuilders.get("/metro"))
-        .andExpect(MockMvcResultMatchers.status().is(200));
+        .andExpect(MockMvcResultMatchers.status().is(200))
+        .andExpect(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(5)))
+        .andExpect(MockMvcResultMatchers.content().string(EXPECTED_BODY_RESPONSE));
   }
 }
