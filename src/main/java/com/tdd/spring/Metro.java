@@ -1,7 +1,10 @@
 package com.tdd.spring;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 @Entity
@@ -9,9 +12,21 @@ import javax.persistence.Table;
 public class Metro {
 
   @Id
+  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "metro_id_seq")
+  @SequenceGenerator(name = "metro_id_seq", sequenceName = "metro_id_seq", allocationSize = 1)
   private Integer id;
 
   private String name;
+
+  private String status;
+  
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
 
   public Metro() {
     super();

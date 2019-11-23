@@ -1,11 +1,15 @@
 package com.tdd.spring;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -56,4 +60,31 @@ public class TestMetroService {
 
   }
 
+  
+  @ParameterizedTest
+  @ValueSource(strings = {"Delhi", "Pune"})
+  public void whenGivenNewMetroProposal__thenReturnSuccessMessage(String proposedMetro) {
+    Mockito.when(this.metroRepository.findByName(proposedMetro)).thenReturn(null);
+    assertEquals("OK", this.metroService.performMetroSubmission(proposedMetro));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Hyderabad", "Bengaluru"})
+  public void whenGivenExistingMetroName__thenReturnInvalidMessage(String proposedMetro) {
+    Metro metro = new Metro();
+    metro.setStatus("confirmed");
+    Mockito.when(this.metroRepository.findByName(proposedMetro)).thenReturn(metro);
+    assertEquals("confirmed", this.metroService.performMetroSubmission(proposedMetro));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Chandigarh"})
+  public void whenGivenAlreadyProposedMetroName__thenReturnInvalidMessage(String proposedMetro) {
+    Metro metro = new Metro();
+    metro.setStatus("proposed");
+    Mockito.when(this.metroRepository.findByName(proposedMetro)).thenReturn(metro);
+    assertEquals("proposed", this.metroService.performMetroSubmission(proposedMetro));
+  }
+
+  
 }

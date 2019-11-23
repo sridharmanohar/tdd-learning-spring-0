@@ -1,7 +1,11 @@
 package com.tdd.spring;
 
+import javax.transaction.Transactional;
+
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,4 +41,34 @@ public class TestMetro {
         .andExpect(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(5)))
         .andExpect(MockMvcResultMatchers.content().string(EXPECTED_BODY_RESPONSE));
   }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Delhi", "Pune"})
+  @Transactional
+  public void whenGivenNewMetroProposal__thenReturnSuccessMessage(String proposedMetro)
+      throws Exception {
+    mockMvc.perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
+    .andExpect(MockMvcResultMatchers.status().is(200))
+    .andExpect(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(6)));
+  }
+
+//  @ParameterizedTest
+//  @ValueSource(strings = {"Hyderabad", "Chennai"})
+//  @Transactional
+  public void whenGivenExistingMetro__thenReturnInvalidMessage(String proposedMetro)
+      throws Exception {
+    mockMvc.perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
+    .andExpect(MockMvcResultMatchers.status().is(200))
+    .andExpect(MockMvcResultMatchers.content().string(proposedMetro + " is already a Metro, nothing to propose!"));
+  }
+
+//  @ParameterizedTest
+//  @ValueSource(strings = {"Delhi"})
+//  @org.springframework.transaction.annotation.Transactional
+  public void whenGivenProposedMetro__thenReturnInvalidMessage(String proposedMetro) throws Exception {
+    mockMvc.perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
+    .andExpect(MockMvcResultMatchers.status().is(200))
+    .andExpect(MockMvcResultMatchers.content().string(proposedMetro + " has been proposed already!!"));
+  }
+  
 }
