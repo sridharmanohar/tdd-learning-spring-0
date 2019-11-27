@@ -180,22 +180,50 @@ select * from metros;
    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="metro_id_seq")  
    @SequenceGenerator(name="metro_id_seq", sequenceName="metro_id_seq", allocationSize=1)  
 + Ofcourse, you still have to create this sequence in the db for it to work
++ Now, let's create a sequence in postgresql Temp db:
+    CREATE SEQUENCE metro_id_seq OWNED BY metros.id;
++ As of now I dont know how to check what sequence is attached with a table's column, I've tried the below query but it doesn't show anything: 
+SELECT table_name, column_name, column_default from information_schema.columns where table_name='metros';    
++ But if you want to check all sequences that have been created, use the below query. It still does not tell you with which table/column is this sequence associated with.
+select * from information_schema.sequences;
+
+## validating JSON Response from the RestController:
++ Most of the times we get a json response from RestController but to validate it in the test unit it is not straightforward.
++ For instance, if you are getting your MockHttpServletResponse as below in your unit test code:
+MockHttpServletResponse:
+           Status = 200
+    Error message = null
+          Headers = [Content-Type:"application/json"]
+     Content type = application/json
+             Body = [{"id":3,"name":"Bengaluru","status":"confirmed"},{"id":4,"name":"Kolkata","status":"confirmed"},{"id":1,"name":"Hyderabad","status":"confirmed"},{"id":2,"name":"Chennai","status":"confirmed"},{"id":46,"name":"Delhi","status":"proposed"},{"id":5,"name":"Mumbai","status":"confirmed"}]
+    Forwarded URL = null
+   Redirected URL = null
+          Cookies = []
+
++ And if you want to validate whether a certain element is part of the body, one way is to pull the entire thing as a string and do a string compare or a substring search but the better way is to use Jackson's ObjectMapper API.
++ When you do an andReturn() on your MockMvc instance then you get a MvcResult instance, use this to fetch the response as content string:
+    MvcResult result = mockMvc
+        .perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
+        .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+    String contentString = result.getResponse().getContentAsString();
++ Now, use the above contentstring and supply it to the ObjectMapper along with the class that would match with the elements in json response:
+    java.util.List<Metro> metroList = this.objectMapper.readValue(contentString,
+        new TypeReference<java.util.List<Metro>>() {
+        });
++ That's it, now you have a List of Metro objects, do whatever validation you want to do on this list of objects.
++ This article is a great resource on various things that we can using Jackson's ObjectMapper i.e. - how to serialize Java objects into JSON and deserialize JSON string into Java objects
+https://www.baeldung.com/jackson-object-mapper-tutorial
+
+## Testing from REST Client (POSTMAN):
++ Boot up the application by running the main class i.e. class containg the annot. @SpringBootApplication and calling a SpringApplication.run method.
++ Open up your postman and do a GET for http://localhost:8080/metro, you must see the response in json array.
++ Now, let's do a POST:
+    http://localhost:8080/proposeMetro/Delhi
+    This must return you the list of all existing metros along with this one, but this should have a status of 'proposed' and everything else the status of 'conformed'.
++ Now, if you POST the same metro again, you should get a BAD REQUEST (400) as the status code and the body should contain the already existing metro name and it's status:
+    http://localhost:8080/proposeMetro/Delhi    
++ And, if you POST a metro which already exists as a confirmed metro in the db then you should again get a 400 BAD REQUEST as a status code and the body should contain the metro name and it's status:
+    http://localhost:8080/proposeMetro/Hyderabad    
 ----------------------------------------------------------------------------------------------------------------------------
 ## ROUGH Notes
-
-## Insert
-. insert into test (id) values (1);
-
-## Sequence
-. CREATE SEQUENCE judgements_id_seq OWNED BY test.id;
-
-## PostgreSQL - Hibernate Sequence
-. GenerationType.AUTO is not working w/ postgresql and hibernate.    
-. Generation.IDENTITY also not working.  
-. So, use the following:  
-   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="judgements_id_seq")  
-   @SequenceGenerator(name="judgements_id_seq", sequenceName="judgements_id_seq", allocationSize=1)  
-. Ofcourse, you still have to create this sequence in the db for it to work  
-
-
 

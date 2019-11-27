@@ -35,7 +35,7 @@ public class MetroService {
   }
 
   public Set<Metro> performMetroSubmission(String proposedMetro) {
-    Set<Metro> returnSet = new HashSet<Metro>();
+     Set<Metro> returnSet = new HashSet<Metro>();
     if (checkMetroStatus(proposedMetro) != null) {
       returnSet.add(checkMetroStatus(proposedMetro));
       return returnSet; 

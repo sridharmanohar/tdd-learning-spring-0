@@ -61,17 +61,13 @@ public class TestMetroController {
    * @throws Exception
    */
   @ParameterizedTest
-  @ValueSource(strings = { "Chennai", "Hyderabad" })
+  @ValueSource(strings = { /*"Chennai",*/ "Hyderabad" })
   public void whenGivenExistingMetro__thenInvalidMessage(String proposedMetro) throws Exception {
     Set<Metro> returnSet = new HashSet<Metro>();
     Metro m0 = new Metro();
     m0.setName("Hyderabad");
-    m0.setName("confirmed");
-    Metro m1 = new Metro();
-    m0.setName("Chennai");
-    m0.setName("confirmed");
+    m0.setStatus("confirmed");
     returnSet.add(m0);
-    returnSet.add(m1);
     Mockito.when(this.metroService.performMetroSubmission(proposedMetro)).thenReturn(returnSet);
     mockMvc.perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
         .andExpect(MockMvcResultMatchers.status().is(200)).andExpect(MockMvcResultMatchers.content()
@@ -125,7 +121,7 @@ public class TestMetroController {
     Set<Metro> returnSet = new HashSet<Metro>();
     Metro m0 = new Metro();
     m0.setName("Chandigarh");
-    m0.setName("proposed");
+    m0.setStatus("proposed");
     returnSet.add(m0);
     Mockito.when(this.metroService.performMetroSubmission(proposedMetro)).thenReturn(returnSet);
     mockMvc.perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
