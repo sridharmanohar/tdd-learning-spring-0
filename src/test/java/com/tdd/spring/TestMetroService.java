@@ -33,43 +33,11 @@ public class TestMetroService {
     this.metroService = metroService;
   }
 
-  /**
-   * verify service layer returns a list of metros when it calls the necessary
-   * repository method.
-   */
-  @Test
-  public void verify_metros_result_set_noduplicates() {
-    List<Metro> metros = new ArrayList<>();
-    Metro metro0 = new Metro("Hyderabad");
-    Metro metro1 = new Metro("Chennai");
-    Metro metro2 = new Metro("Bengaluru");
-    Metro metro3 = new Metro("Kolkata");
-    Metro metro4 = new Metro("Mumbai");
-    Metro metro5 = new Metro("Hyderabad");
-    Metro metro6 = new Metro("Chennai");
-    metros.add(metro0);
-    metros.add(metro1);
-    metros.add(metro2);
-    metros.add(metro3);
-    metros.add(metro4);
-    metros.add(metro5);
-    metros.add(metro6);
-    Mockito.when(metroRepository.findAll()).thenReturn(metros);
-    Assertions.assertTrue(() -> {
-      Set<String> tempSet = metroService.getMetros();
-      if (tempSet != null && !tempSet.isEmpty() && tempSet.size() == 5)
-        return true;
-      else
-        return false;
-    });
-
-  }
-
   
   @ParameterizedTest
   @ValueSource(strings = {"Delhi", "Pune"})
   public void whenGivenNewMetroProposal__thenReturnSuccessMessage(String proposedMetro) {
-    Set<Metro> metroSet = new HashSet<>();
+    List<Metro> metroSet = new ArrayList<>();
     Metro m0 = new Metro();
     m0.setName("Hyderabad");
     Metro m1 = new Metro();
@@ -84,7 +52,7 @@ public class TestMetroService {
     metroSet.add(m3);
     Mockito.when(this.metroRepository.findByName(proposedMetro)).thenReturn(null);
     Mockito.when(this.metroRepository.findAll()).thenReturn(metroSet.stream().collect(Collectors.toList()));
-    Set<Metro> dummy = this.metroService.performMetroSubmission(proposedMetro);
+    List<Metro> dummy = this.metroService.performMetroSubmission(proposedMetro);
     for(Metro m : dummy) {
       if(m.getName() == proposedMetro)
         assertTrue(1==1);
@@ -99,7 +67,7 @@ public class TestMetroService {
     Metro metro = new Metro();
     metro.setStatus("confirmed");
     Mockito.when(this.metroRepository.findByName(proposedMetro)).thenReturn(metro);
-    Set<Metro> metroSet = this.metroService.performMetroSubmission(proposedMetro);
+    List<Metro> metroSet = this.metroService.performMetroSubmission(proposedMetro);
     String status = "";
     for(Metro m : metroSet)
       status = m.getStatus();
@@ -112,7 +80,7 @@ public class TestMetroService {
     Metro metro = new Metro();
     metro.setStatus("proposed");
     Mockito.when(this.metroRepository.findByName(proposedMetro)).thenReturn(metro);
-    Set<Metro> dummy = this.metroService.performMetroSubmission(proposedMetro);
+    List<Metro> dummy = this.metroService.performMetroSubmission(proposedMetro);
     assertEquals(1, dummy.size());
     for(Metro m : dummy)
       assertEquals("proposed", m.getStatus());

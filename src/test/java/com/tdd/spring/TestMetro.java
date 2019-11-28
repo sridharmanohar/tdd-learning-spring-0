@@ -48,65 +48,77 @@ public class TestMetro {
     System.out.println(" ----------------- IN HERE -----------------------");
     mockMvc.perform(MockMvcRequestBuilders.get("/metro"))
         .andExpect(MockMvcResultMatchers.status().is(200))
-        .andExpect(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(5)))
+        .andExpect(MockMvcResultMatchers.jsonPath("$", Matchers.hasSize(6)))
         .andExpect(MockMvcResultMatchers.content().string(EXPECTED_BODY_RESPONSE));
   }
 
-  
   @ParameterizedTest
   @ValueSource(strings = { "Pune" })
   @Transactional
   public void whenGivenNewMetroProposal__thenReturnSuccessMessage(String proposedMetro)
       throws Exception {
-
+    
     MvcResult result = mockMvc
         .perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
         .andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
 
-    String contentString = result.getResponse().getContentAsString();
+    String jsonResponseString = result.getResponse().getContentAsString();
 
-    List<Metro> metroList = this.objectMapper.readValue(contentString,
+    List<Metro> metroList = this.objectMapper.readValue(jsonResponseString,
         new TypeReference<List<Metro>>() {
         });
 
     boolean found = false;
 
     for (Metro m : metroList) {
-      if (m.getName().equalsIgnoreCase(proposedMetro)) {
+      if (m.getName().equalsIgnoreCase(proposedMetro))
         found = true;
-      }
     }
 
     assertTrue(found);
   }
 
-  
   @ParameterizedTest
-  @ValueSource(strings = {"Hyderabad"})
+  @ValueSource(strings = { "Hyderabad" })
   @Transactional
   public void whenGivenExistingMetro__thenReturnInvalidMessage(String proposedMetro)
       throws Exception {
-    String contentString = mockMvc.perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
-        .andExpect(MockMvcResultMatchers.status().isBadRequest()).andReturn().getResponse().getContentAsString();
-    List<Metro> metroList = this.objectMapper.readValue(contentString, new TypeReference<List<Metro>>() {});
+    
+    String jsonResponseString = mockMvc
+        .perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
+        .andExpect(MockMvcResultMatchers.status().isBadRequest()).andReturn().getResponse()
+        .getContentAsString();
+
+    List<Metro> metroList = this.objectMapper.readValue(jsonResponseString,
+        new TypeReference<List<Metro>>() {
+        });
+
     assertEquals(1, metroList.size());
-    for(Metro m : metroList) {
+
+    for (Metro m : metroList) {
       assertEquals("confirmed", m.getStatus());
       assertEquals(proposedMetro, m.getName());
     }
   }
 
-  
   @ParameterizedTest
-  @ValueSource(strings = {"Delhi"})
+  @ValueSource(strings = { "Delhi" })
   @Transactional
   public void whenGivenProposedMetro__thenReturnInvalidMessage(String proposedMetro)
       throws Exception {
-    String contentString = mockMvc.perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
-        .andExpect(MockMvcResultMatchers.status().isBadRequest()).andReturn().getResponse().getContentAsString();
-    List<Metro> metroList = this.objectMapper.readValue(contentString, new TypeReference<List<Metro>>() {});
+    
+    String jsonResponseString = mockMvc
+        .perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
+        .andExpect(MockMvcResultMatchers.status().isBadRequest()).andReturn().getResponse()
+        .getContentAsString();
+
+    List<Metro> metroList = this.objectMapper.readValue(jsonResponseString,
+        new TypeReference<List<Metro>>() {
+        });
+
     assertEquals(1, metroList.size());
-    for(Metro m : metroList) {
+
+    for (Metro m : metroList) {
       assertEquals("proposed", m.getStatus());
       assertEquals(proposedMetro, m.getName());
     }

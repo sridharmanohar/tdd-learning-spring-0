@@ -1,5 +1,6 @@
 package com.tdd.spring;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,15 +28,13 @@ public class MetroService {
   /**
    * Returns Metros (avoiding removing any duplicates).
    */
-  public Set<String> getMetros() {
+  public List<Metro> getMetros() {
     List<Metro> metroList = metroRepository.findAll();
-    Set<String> metroSet = new HashSet<>();
-    metroList.forEach(list -> metroSet.add(list.getName()));
-    return metroSet;
+    return metroList;
   }
 
-  public Set<Metro> performMetroSubmission(String proposedMetro) {
-     Set<Metro> returnSet = new HashSet<Metro>();
+  public List<Metro> performMetroSubmission(String proposedMetro) {
+     List<Metro> returnSet = new ArrayList<Metro>();
     if (checkMetroStatus(proposedMetro) != null) {
       returnSet.add(checkMetroStatus(proposedMetro));
       return returnSet; 
@@ -52,9 +51,9 @@ public class MetroService {
     return metro;
   }
   
-  private Set<Metro> save(Metro metro) {
+  private List<Metro> save(Metro metro) {
     this.metroRepository.save(metro);
-    return this.metroRepository.findAll().stream().collect(Collectors.toSet());
+    return this.metroRepository.findAll();
   }
 
   private Metro checkMetroStatus(String metro) {

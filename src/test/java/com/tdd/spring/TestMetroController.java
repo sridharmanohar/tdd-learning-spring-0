@@ -1,7 +1,10 @@
 package com.tdd.spring;
 
-import java.util.HashSet;
-import java.util.Set;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,12 +18,18 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 public class TestMetroController {
 
   private final MockMvc mockMvc;
   private final MetroController metroController;
+  private final ObjectMapper objectMapper;
 
   @MockBean
   private MetroService metroService;
@@ -29,54 +38,103 @@ public class TestMetroController {
   private MetroRepository metroRepository;
 
   @Autowired
-  public TestMetroController(MetroController metroController, MockMvc mockMvc) {
+  public TestMetroController(MetroController metroController, MockMvc mockMvc,
+      ObjectMapper objectMapper) {
     this.metroController = metroController;
     this.mockMvc = mockMvc;
+    this.objectMapper = objectMapper;
+  }
+
+  private List<Metro> getInputMetroList(String[][] input_array) {
+    List<Metro> metroList = new ArrayList<>();
+    for (int i = 0; i < input_array.length; i++) {
+      for (int j = 0; j < 1; j++) {
+        metroList.add(new Metro(input_array[i][j], input_array[i][j + 1]));
+      }
+    }
+    return metroList;
+  }
+
+  private String getJSONResponseString(String action, String path, int status) throws Exception {
+    String responseString = "";
+
+    if (action.equalsIgnoreCase("get"))
+      responseString = mockMvc.perform(MockMvcRequestBuilders.get(path))
+          .andExpect(MockMvcResultMatchers.status().is(status)).andReturn().getResponse()
+          .getContentAsString();
+    else if (action.equalsIgnoreCase("post"))
+      responseString = mockMvc.perform(MockMvcRequestBuilders.post(path))
+          .andExpect(MockMvcResultMatchers.status().is(status)).andReturn().getResponse()
+          .getContentAsString();
+
+    return responseString;
+  }
+
+  private List<Metro> convertJSONResponseStringToList(String jsonresponseString)
+      throws JsonMappingException, JsonProcessingException {
+    return this.objectMapper.readValue(jsonresponseString, new TypeReference<List<Metro>>() {
+    });
+  }
+
+  private void mockMe(List<Metro> given, String[][] input_array) {
+    Mockito.when(given).thenReturn(getInputMetroList(input_array));
   }
 
   /**
-   * verify that when a user hits "/metro" he gets a status 200. verify that when
-   * a user hits "/metro" he gets a json response. verify the count of metros
-   * returned when user hits "/metro".
+   * verify when a user hits "/metro" he gets a status 200.
+   * 
+   * verify when a user hits "/metro" he gets a json response.
+   * 
+   * verify the count of metros returned when user hits "/metro".
    */
   @Test
   public void whenMetros__thenStatus200() throws Exception {
-    Set<String> metros = new HashSet<>();
-    metros.add("Hyderabad");
-    metros.add("Chennai");
-    metros.add("Bengaluru");
-    metros.add("Kolkata");
-    metros.add("Mumbai");
-    Mockito.when(metroService.getMetros()).thenReturn(metros);
-    mockMvc.perform(MockMvcRequestBuilders.get("/metro"))
-        .andExpect(MockMvcResultMatchers.status().is(200))
-        .andExpect(MockMvcResultMatchers.jsonPath("$", org.hamcrest.Matchers.hasSize(5)));
+    String[][] input_array = { { "Hyderabad", "confirmed" }, { "Chennai", "confirmed" },
+        { "Bengaluru", "confirmed" }, { "Kolkata", "confirmed" }, { "Mumbai", "confirmed" } };
+    mockMe(metroService.getMetros(), input_array);
+    assertEquals(5,
+        convertJSONResponseStringToList(getJSONResponseString("get", "/metro", 200)).size());
   }
 
   /**
-   * verify when an existing metro is supplied to be added to the proposed metros,
-   * an invalid message explaining the cause should be show to the user.
+   * verify when an existing metro with a status confirmed is supplied to be added
+   * to the proposed metros list, a BAD_REQUEST (400) is returned.
+   * 
+   * also, verify the response contains the supplied metros name and status.
    * 
    * @param proposedMetro
    * @throws Exception
    */
   @ParameterizedTest
-  @ValueSource(strings = { /*"Chennai",*/ "Hyderabad" })
+  @ValueSource(strings = { "Hyderabad", "Mumbai" })
   public void whenGivenExistingMetro__thenInvalidMessage(String proposedMetro) throws Exception {
-    Set<Metro> returnSet = new HashSet<Metro>();
-    Metro m0 = new Metro();
-    m0.setName("Hyderabad");
-    m0.setStatus("confirmed");
-    returnSet.add(m0);
-    Mockito.when(this.metroService.performMetroSubmission(proposedMetro)).thenReturn(returnSet);
-    mockMvc.perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
-        .andExpect(MockMvcResultMatchers.status().is(200)).andExpect(MockMvcResultMatchers.content()
-            .string(proposedMetro + " is already a Metro, nothing to propose!"));
+    String[][] input_array = { { proposedMetro, "confirmed" } };
+
+    mockMe(this.metroService.performMetroSubmission(proposedMetro), input_array);
+
+    List<Metro> metroList = convertJSONResponseStringToList(
+        getJSONResponseString("post", "/proposeMetro/" + proposedMetro, 400));
+
+    assertTrue(metroList.size() == 1);
+
+    boolean match = false;
+
+    for (Metro m : metroList) {
+      if (proposedMetro.equalsIgnoreCase(m.getName())
+          && "confirmed".equalsIgnoreCase(m.getStatus()))
+        match = true;
+    }
+
+    assertTrue(match);
   }
 
   /**
-   * verify when a valid new name is submitted for metro proposal, user should be
-   * shown a success message.
+   * verify when a valid new city is submitted for metro proposal, user should get
+   * a OK (200) status code.
+   * 
+   * verify when a valid new city is submitted for metro proposal, user, in
+   * response, should get the list of already existing metrors and the new metro
+   * along with their status codes.
    * 
    * @param proposedMetro
    * @throws Exception
@@ -84,32 +142,32 @@ public class TestMetroController {
   @ParameterizedTest
   @ValueSource(strings = { "Delhi", "Pune" })
   public void whenGivenNewMetroProposal__thenSuccessMessage(String proposedMetro) throws Exception {
-    Set<Metro> returnSet = new HashSet<Metro>();
-    Metro m0 = new Metro();
-    m0.setName("Hyderabad");
-    m0.setName("confirmed");
-    Metro m1 = new Metro();
-    m0.setName("Bengaluru");
-    m0.setName("confirmed");
-    Metro m2 = new Metro();
-    m0.setName("Delhi");
-    m0.setName("proposed");
-    Metro m3 = new Metro();
-    m0.setName("Pune");
-    m0.setName("proposed");
-    returnSet.add(m0);
-    returnSet.add(m1);
-    returnSet.add(m2);
-    returnSet.add(m3);
-    Mockito.when(this.metroService.performMetroSubmission(proposedMetro)).thenReturn(returnSet);
-    mockMvc.perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
-        .andExpect(MockMvcResultMatchers.status().is(200)).andExpect(MockMvcResultMatchers.content()
-            .string(proposedMetro + " is successfully submitted for proposal."));
+    String[][] input_array = { { "Hyderabad", "confirmed" }, { "Bengaluru", "confirmed" },
+        { proposedMetro, "proposed" }, };
+
+    mockMe(this.metroService.performMetroSubmission(proposedMetro), input_array);
+
+    List<Metro> listMetros = convertJSONResponseStringToList(
+        getJSONResponseString("post", "/proposeMetro/" + proposedMetro, 200));
+
+    assertEquals(3, listMetros.size());
+
+    boolean match = false;
+
+    for (Metro m : listMetros) {
+      if (proposedMetro.equalsIgnoreCase(m.getName()) && "proposed".equalsIgnoreCase(m.getStatus()))
+        match = true;
+    }
+
+    assertTrue(match);
   }
 
   /**
-   * verify when an already proposed metro name is submitted, user gets an
-   * appropriate message
+   * verify when an already proposed metro name is submitted, user will get a
+   * BAD_REQUEST (400) status code.
+   * 
+   * verify when an already proposed metro name is submitted, the response
+   * contains the name of the metro along with it's status.
    * 
    * @param proposedMetro
    * @throws Exception
@@ -118,15 +176,27 @@ public class TestMetroController {
   @ValueSource(strings = { "Chandigarh" })
   public void whenGivenAlreadyProposedMetroName__thenReturnInvalidMessage(String proposedMetro)
       throws Exception {
-    Set<Metro> returnSet = new HashSet<Metro>();
-    Metro m0 = new Metro();
-    m0.setName("Chandigarh");
-    m0.setStatus("proposed");
-    returnSet.add(m0);
-    Mockito.when(this.metroService.performMetroSubmission(proposedMetro)).thenReturn(returnSet);
-    mockMvc.perform(MockMvcRequestBuilders.post("/proposeMetro/{metroName}", proposedMetro))
-        .andExpect(MockMvcResultMatchers.status().is(200)).andExpect(
-            MockMvcResultMatchers.content().string(proposedMetro + " has been proposed already!!"));
+    String[][] input_array = { { proposedMetro, "proposed" } };
+
+    mockMe(this.metroService.performMetroSubmission(proposedMetro), input_array);
+
+    List<Metro> metroList = convertJSONResponseStringToList(
+        getJSONResponseString("post", "/proposeMetro/" + proposedMetro, 400));
+
+    assertTrue(metroList.size() == 1);
+
+    boolean nameMatch = false;
+    boolean statusMatch = false;
+
+    for (Metro m : metroList) {
+      if (proposedMetro.equalsIgnoreCase(m.getName()))
+        nameMatch = true;
+      if ("proposed".equalsIgnoreCase(m.getStatus()))
+        statusMatch = true;
+    }
+
+    assertTrue(nameMatch);
+    assertTrue(statusMatch);
   }
 
 }

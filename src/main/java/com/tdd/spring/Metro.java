@@ -19,7 +19,12 @@ public class Metro {
   private String name;
 
   private String status;
-  
+
+  public Metro(String name, String status) {
+    this.name = name;
+    this.status = status;
+  }
+
   public String getStatus() {
     return status;
   }

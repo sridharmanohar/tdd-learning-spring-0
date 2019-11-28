@@ -1,5 +1,6 @@
 package com.tdd.spring;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,14 +22,14 @@ public class MetroController {
   }
 
   @GetMapping("/metro")
-  public Set<String> getMetros() {
+  public List<Metro> getMetros() {
     System.out.println("/metro has been called");
     return metroService.getMetros();
   }
 
   @PostMapping("/proposeMetro/{metroName}")
-  public ResponseEntity<Set<Metro>> proposeMetro(@PathVariable(name = "metroName") String proposedMetro) {
-    Set<Metro> metros = this.metroService.performMetroSubmission(proposedMetro);
+  public ResponseEntity<List<Metro>> proposeMetro(@PathVariable(name = "metroName") String proposedMetro) {
+    List<Metro> metros = this.metroService.performMetroSubmission(proposedMetro);
     String res = "";
     if(metros.size() == 1) {
       for(Metro m : metros) {
@@ -36,10 +37,10 @@ public class MetroController {
       }
     }
     if (metros.size() == 1 && res.equalsIgnoreCase("proposed")) {
-      return new ResponseEntity<Set<Metro>>(metros, HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<List<Metro>>(metros, HttpStatus.BAD_REQUEST);
     }
     else if (metros.size() == 1 && res.equalsIgnoreCase("confirmed")) {
-      return new ResponseEntity<Set<Metro>>(metros, HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<List<Metro>>(metros, HttpStatus.BAD_REQUEST);
     }
     else if (metros.size() > 1) {
       System.out.println("metro size : "+ metros.size());
