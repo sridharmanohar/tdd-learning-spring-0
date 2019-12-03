@@ -1,2 +1,7 @@
-com/tdd/spring/TestMetroController$1.class
-com/tdd/spring/TestSuper.class
+com/tdd/spring/TestMetroSuper$METRO.class
+com/tdd/spring/TestMetroSuper.class
+com/tdd/spring/TestMetroSuper$1.class
+com/tdd/spring/TestMetroSuper$ACTION.class
+com/tdd/spring/TestMetroSuper$METROSTATUS.class
+com/tdd/spring/TestMetroSuper$HTTPREQUEST.class
+com/tdd/spring/TestMetroSuper$HTTPSTATUS.class
