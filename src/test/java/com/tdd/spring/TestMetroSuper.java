@@ -83,12 +83,14 @@ public class TestMetroSuper {
     return metroList;
   }
 
+  
   private List<Metro> convertJSONResponseStringToList(String jsonresponseString)
       throws JsonMappingException, JsonProcessingException {
     return this.objectMapper.readValue(jsonresponseString, new TypeReference<List<Metro>>() {
     });
   }
 
+  
   private String getJSONResponseString(String action, String path) throws Exception {
     String responseString = action.equalsIgnoreCase("get")
         ? mockMvc.perform(MockMvcRequestBuilders.get(path)).andReturn().getResponse()
@@ -99,10 +101,12 @@ public class TestMetroSuper {
     return responseString;
   }
   
+  
   protected void mockThisCall(List<Metro> given, String[][] input_array) {
     Mockito.when(given).thenReturn(getInputMetroList(input_array));
   }
 
+  
   protected long verifyIfMetroList__contains__suppliedNameandStatus(String metroName,
       String metroStatus, List<Metro> metroList) {
     long count = metroList.stream().filter(m -> {
@@ -113,6 +117,7 @@ public class TestMetroSuper {
     return count;
   }
 
+  
   protected int getStatusCode(String action, String path) throws Exception {
     int status_code = action.equalsIgnoreCase("get")
         ? mockMvc.perform(MockMvcRequestBuilders.get(path)).andReturn().getResponse().getStatus()
@@ -121,11 +126,13 @@ public class TestMetroSuper {
     return status_code;
   }
 
+  
   protected List<Metro> getMetroList(String action, String path)
       throws JsonMappingException, JsonProcessingException, Exception {
     return convertJSONResponseStringToList(getJSONResponseString(action, path));
   }
 
+  
   protected int getMetroListSize(String requestType, String action)
       throws JsonMappingException, JsonProcessingException, Exception {
     return getMetroList(requestType, action).size();

@@ -69,7 +69,7 @@ public class TestMetroController extends TestMetroSuper {
 
   @ParameterizedTest
   @EnumSource(value = METRO.class, names = { "HYDERABAD", "MUMBAI" })
-  public void whenConfirmedMetroSubmittedForProposal__thenResponseStatus_IS_400(METRO argument)
+  public void whenConfirmedMetroSubmittedForProposal__thenResponseStatusIs400(METRO argument)
       throws Exception {
     String[][] existingConfirmedMetroFromDatabase = {
         { argument.value, METROSTATUS.CONFIRMED.value } };
@@ -99,7 +99,7 @@ public class TestMetroController extends TestMetroSuper {
 
   @ParameterizedTest
   @EnumSource(value = METRO.class, names = { "HYDERABAD", "MUMBAI" })
-  public void whenConfirmedMetroSubmittedForProposal__thenReturnedMetroList_contains_suppliedMetro(
+  public void whenConfirmedMetroSubmittedForProposal__thenReturnedMetroListContainsSuppliedMetro(
       METRO argument) throws Exception {
     String[][] existingConfirmedMetroFromDatabase = {
         { argument.value, METROSTATUS.CONFIRMED.value } };
@@ -173,7 +173,7 @@ public class TestMetroController extends TestMetroSuper {
 
   @ParameterizedTest
   @EnumSource(value = METRO.class, names = { "CHANDIGARH" })
-  public void whenProposedMetroSubmittedForProposal__thenResponseStatus_IS_400(METRO argument)
+  public void whenProposedMetroSubmittedForProposal__thenResponseStatusIs400(METRO argument)
       throws Exception {
     String[][] existingProposedMetroFromDB = { { argument.value, METROSTATUS.PROPOSED.value } };
 
