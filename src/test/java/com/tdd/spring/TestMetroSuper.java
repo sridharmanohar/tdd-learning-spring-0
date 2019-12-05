@@ -57,8 +57,9 @@ public class TestMetroSuper {
 
   }
 
-  private final MockMvc mockMvc;
-  private final ObjectMapper objectMapper;
+  private MetroService metroService;
+  private MockMvc mockMvc;
+  private ObjectMapper objectMapper;
 
   public TestMetroSuper(MockMvc mockMvc, ObjectMapper objectMapper) {
     super();
@@ -66,6 +67,9 @@ public class TestMetroSuper {
     this.objectMapper = objectMapper;
   }
 
+  public TestMetroSuper() {}
+  
+  
   /**
    * converting the supplied mutli-dimensional array, containing metro name and
    * status is converted into a list of Metro objects.
@@ -73,7 +77,7 @@ public class TestMetroSuper {
    * @param input_array
    * @return
    */
-  private List<Metro> getInputMetroList(String[][] input_array) {
+  private List<Metro> convertArrayToList(String[][] input_array) {
     List<Metro> metroList = new ArrayList<>();
     for (int i = 0; i < input_array.length; i++) {
       for (int j = 0; j < 1; j++) {
@@ -101,10 +105,37 @@ public class TestMetroSuper {
     return responseString;
   }
   
+  /**
+   * converts multi-dimensional array into a single Metro object.
+   * This multi-dim input array will always carry only one row and hence
+   * a single object.
+   * 
+   * @param input_array
+   * @return
+   */
+  private Metro convertArrayToObject(String[][] input_array) {
+    Metro mockedMetro = new Metro();
+    if(input_array != null) {
+      for (int i = 0; i < input_array.length; i++) {
+        for (int j = 0; j < 1; j++) {
+          mockedMetro.setName(input_array[i][j]);
+          mockedMetro.setStatus(input_array[i][j + 1]);
+        }
+      }
+      return mockedMetro;
+    } else {
+      return null;
+    }
+  }
   
   protected void mockThisCall(List<Metro> given, String[][] input_array) {
-    Mockito.when(given).thenReturn(getInputMetroList(input_array));
+    Mockito.when(given).thenReturn(convertArrayToList(input_array));
   }
+  
+  protected void mockThisCall(Metro given, String[][] input_array) {
+    Mockito.when(given).thenReturn(convertArrayToObject(input_array));
+  }
+  
 
   
   protected long verifyIfMetroList__contains__suppliedNameandStatus(String metroName,

@@ -1,52 +1,18 @@
 package com.tdd.spring;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 @SpringBootTest
-public class TestMetroService {
+public class TestMetroService extends TestMetroSuper {
 
-  enum METRO {
-    HYDERABAD("Hyderabad"), BENGALURU("Bengaluru"), CHENNAI("Chennai"), PUNE("Pune"),
-    DELHI("Delhi"), MUMBAI("Mumbai"), KOLKATA("Kolkata"), CHANDIGARH("Chandigarh");
-    protected String value;
-
-    private METRO(String name) {
-      this.value = name;
-    }
-
-  }
-
-  enum METROSTATUS {
-    CONFIRMED("confirmed"), PROPOSED("proposed");
-    protected String value;
-
-    private METROSTATUS(String name) {
-      this.value = name;
-    }
-
-  }
-  
-  
   private final MetroService metroService;
 
   @MockBean
@@ -54,12 +20,13 @@ public class TestMetroService {
 
   @Autowired
   public TestMetroService(MetroService metroService) {
+    super();
     this.metroService = metroService;
   }
 
   
+  // THIS NEEDS TO REFACTORED LIKE OTHERS !
   @ParameterizedTest
-//  @ValueSource(strings = {"Delhi", "Pune"})
   @EnumSource(value = METRO.class, names = {"DELHI", "PUNE"})
   public void whenNewMetroProposalSubmitted__thenReturnedMetroListShouldContainSuppliedMetroAlso(METRO proposedMetro) {
     String[][] metroArray = {
@@ -68,55 +35,66 @@ public class TestMetroService {
         {proposedMetro.value, METROSTATUS.CONFIRMED.value}
     };
     
-    List<Metro> metroList = convertArrayToList(metroArray);
+    mockThisCall(this.metroRepository.findByName(proposedMetro.value), null);
+    mockThisCall(this.metroRepository.findAll(), metroArray);
     
-    Mockito.when(this.metroRepository.findByName(proposedMetro.value)).thenReturn(null);
-    Mockito.when(this.metroRepository.findAll()).thenReturn(metroList);
-    List<Metro> metrosInSystemAfterNewMetroSubmission = this.metroService.performMetroSubmission(proposedMetro);
+    List<Metro> metrosInSystemAfterNewMetroSubmission = this.metroService.performMetroSubmission(proposedMetro.value);
     
     long matchedMetros = metrosInSystemAfterNewMetroSubmission.stream().filter(m -> {
-      return m.getName().equalsIgnoreCase(proposedMetro);
+      return m.getName().equalsIgnoreCase(proposedMetro.value);
     }).count();
     
     assertTrue(matchedMetros == 1);
     
  }
 
-  private List<Metro> convertArrayToList(String[][] input_array) {
-    List<Metro> metroList = new ArrayList<>();
-    for (int i = 0; i < input_array.length; i++) {
-      for (int j = 0; j < 1; j++) {
-        metroList.add(new Metro(input_array[i][j], input_array[i][j + 1]));
-      }
-    }
+  @ParameterizedTest
+  @EnumSource(value = METRO.class, names = {"HYDERABAD", "BENGALURU"})
+  public void whenAlreadyConfirmedMetroSubmittedAgain__thenReturnedListShouldContainOnlySuppliedMetro(METRO proposedMetro) {
+    List<Metro> metroList =  prepareData(proposedMetro.value, METROSTATUS.CONFIRMED.value);    
+    long matchedMetros = metroList.stream().filter(m -> {
+      return m.getName().equalsIgnoreCase(proposedMetro.value) && m.getStatus().equalsIgnoreCase(METROSTATUS.CONFIRMED.value);
+    }).count();
+    
+    assertTrue(matchedMetros == 1);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = METRO.class, names = {"HYDERABAD", "BENGALURU"})
+  public void whenAlreadyConfirmedMetroSubmittedAgain__thenReturnedListSizeShouldBeOne(METRO proposedMetro) {
+    List<Metro> metroList =  prepareData(proposedMetro.value, METROSTATUS.CONFIRMED.value);
+    assertTrue(metroList.size() == 1);
+  }
+  
+  
+  @ParameterizedTest
+  @EnumSource(value = METRO.class, names = {"CHANDIGARH"})
+  public void whenAlreadyProposedMetroSubmittedAgain__thenReturnListShouldContainSuppliedMetro(METRO proposedMetro) {
+    List<Metro> metroList =  prepareData(proposedMetro.value, METROSTATUS.PROPOSED.value);
+    
+    long matchedMetros = metroList.stream().filter(m -> {
+      return m.getName().equalsIgnoreCase(proposedMetro.value) && m.getStatus().equalsIgnoreCase(METROSTATUS.PROPOSED.value);
+    }).count();
+    
+    assertTrue(matchedMetros == 1);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = METRO.class, names = {"CHANDIGARH"})
+  public void whenAlreadyProposedMetroSubmittedAgain__thenReturnListShouldSizeShouldBeOne(METRO proposedMetro) {
+    List<Metro> metroList =  prepareData(proposedMetro.value, METROSTATUS.PROPOSED.value);
+    
+    assertTrue(metroList.size() == 1);
+  }
+
+  // NAME THIS TO SOMETHING BETTER, MAYBE.
+  private List<Metro> prepareData(String metroName, String metroStatus) {
+    String[][] metroArray = {
+        {metroName, metroStatus}  
+    };
+    mockThisCall(this.metroRepository.findByName(metroName), metroArray);
+    List<Metro> metroList = this.metroService.performMetroSubmission(metroName);
     return metroList;
   }
-  
-  
-  @ParameterizedTest
-  @ValueSource(strings = {"Hyderabad", "Bengaluru"})
-  public void whenGivenExistingMetroName__thenReturnInvalidMessage(String proposedMetro) {
-    Metro metro = new Metro();
-    metro.setStatus("confirmed");
-    Mockito.when(this.metroRepository.findByName(proposedMetro)).thenReturn(metro);
-    List<Metro> metroSet = this.metroService.performMetroSubmission(proposedMetro);
-    String status = "";
-    for(Metro m : metroSet)
-      status = m.getStatus();
-    assertEquals("confirmed", status);
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"Chandigarh"})
-  public void whenGivenAlreadyProposedMetroName__thenReturnInvalidMessage(String proposedMetro) {
-    Metro metro = new Metro();
-    metro.setStatus("proposed");
-    Mockito.when(this.metroRepository.findByName(proposedMetro)).thenReturn(metro);
-    List<Metro> dummy = this.metroService.performMetroSubmission(proposedMetro);
-    assertEquals(1, dummy.size());
-    for(Metro m : dummy)
-      assertEquals("proposed", m.getStatus());
-  }
-
   
 }
